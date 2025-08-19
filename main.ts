@@ -585,3 +585,96 @@ const Diff = () => {
 
 export default Diff;
 
+import React, { JSX, useState } from 'react';
+import DiffViewer, { DiffMethod } from 'react-diff-viewer';
+
+interface Props {
+    oldValue: string;
+    newValue: string;
+    splitView: boolean;
+}
+
+const YAMLDiffViewer: React.FC<Props> = ({ oldValue, newValue, splitView = false }) => {
+
+    const [left, setLeft] = useState<string>(oldValue);
+    const [right, setRight] = useState<string>(newValue);
+
+    // const originalLines: string[] = left.split('\n');
+    // const modifiedLines: string[] = right.split('\n');
+    // const maxLines = Math.max(originalLines.length, modifiedLines.length);
+
+    const handleMerge = (index: number, direction: 'left-to-right' | 'right-to-left') => {
+        const newLeft = [...left];
+        const newRight = [...right];
+
+        if (direction === 'left-to-right') {
+            newRight[index] = newLeft[index];
+            setRight(newRight.join('\n'));
+        } else {
+            newLeft[index] = newRight[index];
+            setLeft(newLeft.join('\n'));
+        }
+    };
+
+
+    const customRenderContent = (str: string, i: number): JSX.Element => {
+
+
+        const leftLine = left[i] ?? '';
+        const rightLine = right[i] ?? '';
+        const isDifferent = leftLine !== rightLine;
+
+        return (
+            <div style={{ display: 'flex', alignItems: 'center' }}>
+                <span style={{ flex: 1 }}>{str}</span>
+                {isDifferent &&
+                    (<>
+                        <button onClick={() => handleMerge(i, 'left-to-right')} style={{ marginLeft: '8px' }}>
+                            ➡️
+                        </button>
+                        <button onClick={() => handleMerge(i, 'right-to-left')} style={{ marginLeft: '4px' }}>
+                            ⬅️
+                        </button>
+                    </>)
+                }
+            </div>
+        )
+
+    };
+
+    const newStyles = {
+        variables: {
+            light: {
+                codeFoldGutterBackground: "#6F767E",
+                codeFoldBackground: "#E2E4E5"
+            }
+        },
+        line: {
+            wordBreak: 'break-all',
+            whiteSpace: 'pre-wrap'
+        }
+    };
+
+    if (oldValue && newValue) {
+        return (
+            <div className='text-base-content' style={{ display: 'flex', flexDirection: 'column', height: '100%', width: '100%' }}>
+                <div style={{ flex: 1, overflow: 'auto', minWidth: 0 }}>
+                    <DiffViewer
+                        oldValue={oldValue}
+                        newValue={newValue}
+                        splitView={splitView}
+                        compareMethod={DiffMethod.WORDS}
+                        // renderContent={customRenderContent}
+                        styles={newStyles}
+                    />
+                </div>
+            </div>
+        );
+    }
+    return null;
+
+};
+
+export default YAMLDiffViewer;
+
+
